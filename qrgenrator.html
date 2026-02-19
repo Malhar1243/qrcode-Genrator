@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QR Code Generator</title>
+
+<script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", Arial;
+  background: radial-gradient(circle at top, #1b3a4b, #0b1d26 70%);
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 60px 20px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 🔙 BACK BUTTON (card style) */
+.back-btn{
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  background: #ffffff;
+  color: #00bcd4;
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+  z-index: 1000;
+}
+
+.back-btn:hover{
+  opacity: 0.9;
+}
+
+/* BACKGROUND BRAND */
+.bg-brand {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 120px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.04);
+  user-select: none;
+  pointer-events: none;
+  z-index: 0;
+  white-space: nowrap;
+}
+
+/* LAYOUT */
+.wrapper {
+  width: 100%;
+  max-width: 1100px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.panel {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(14px);
+  border-radius: 20px;
+  padding: 35px;
+  box-shadow:
+    0 20px 40px rgba(0,0,0,0.35),
+    inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+h1 { margin-bottom: 25px; }
+
+label {
+  font-size: 14px;
+  opacity: 0.85;
+  margin-bottom: 6px;
+  display: block;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 18px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+}
+
+input, select {
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+}
+
+/* COLOR PICKER */
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.color-row input[type="color"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.color-preview {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.2),
+    0 0 12px rgba(0,0,0,0.4);
+}
+
+.color-code {
+  font-family: monospace;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+/* PREVIEW */
+.preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding-top: 40px;
+}
+
+#qrBox {
+  padding: 22px;
+  border-radius: 18px;
+  background: rgba(0,0,0,0.4);
+  box-shadow: 0 0 30px rgba(0,229,255,0.35);
+}
+
+/* DOWNLOAD */
+.download-bar {
+  width: 100%;
+  display: flex;
+  position: relative;
+}
+
+.download-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #00e5ff, #00bcd4);
+  color: #000;
+  font-weight: 600;
+  padding: 14px;
+  border-radius: 14px 0 0 14px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.dropdown-toggle {
+  width: 56px;
+  background: linear-gradient(135deg, #00e5ff, #00bcd4);
+  border-radius: 0 14px 14px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropdown-toggle::after {
+  content: "▾";
+  font-size: 18px;
+}
+
+.format-menu {
+  position: absolute;
+  right: 0;
+  bottom: 60px;
+  width: 140px;
+  background: rgba(15,30,38,0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  overflow: hidden;
+  display: none;
+}
+
+.format-menu div {
+  padding: 12px 16px;
+  cursor: pointer;
+}
+
+.format-menu div:hover {
+  background: rgba(0,229,255,0.15);
+}
+
+.format-menu .active {
+  background: rgba(0,229,255,0.25);
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .wrapper { grid-template-columns: 1fr; }
+  .bg-brand { font-size: 72px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔙 BACK BUTTON -->
+<a href="../toolshub.html" class="back-btn">← Back</a>
+
+<div class="bg-brand">Malhar Sites</div>
+
+<div class="wrapper">
+
+  <div class="panel">
+    <h1>🔳 QR Code Generator</h1>
+
+    <label>Text / URL</label>
+    <input id="text" placeholder="Enter text or link">
+
+    <label>Size</label>
+    <select id="size">
+      <option value="200">200 × 200</option>
+      <option value="250" selected>250 × 250</option>
+      <option value="300">300 × 300</option>
+      <option value="350">350 × 350</option>
+    </select>
+
+    <label>QR Color</label>
+    <div class="color-row">
+      <input type="color" id="fg" value="#00ADBF">
+      <div class="color-preview" id="fgPreview"></div>
+      <span class="color-code" id="fgCode">#00ADBF</span>
+    </div>
+
+    <label>Background</label>
+    <div class="color-row">
+      <input type="color" id="bg" value="#000000">
+      <div class="color-preview" id="bgPreview"></div>
+      <span class="color-code" id="bgCode">#000000</span>
+    </div>
+
+    <label>Margin (Quiet Zone)</label>
+    <select id="margin">
+      <option value="0">None</option>
+      <option value="10" selected>Normal</option>
+      <option value="20">Large</option>
+    </select>
+
+    <label>Logo (optional)</label>
+    <input type="file" id="logo" accept="image/*">
+
+    <button onclick="generate()">Generate QR</button>
+  </div>
+
+  <div class="panel preview">
+    <div id="qrBox"></div>
+
+    <div class="download-bar">
+      <div class="download-btn" onclick="downloadQR()">Download</div>
+      <div class="dropdown-toggle" onclick="toggleMenu()"></div>
+
+      <div class="format-menu" id="formatMenu">
+        <div class="active" onclick="setFormat('png')">PNG</div>
+        <div onclick="setFormat('jpeg')">JPEG</div>
+        <div onclick="setFormat('svg')">SVG</div>
+        <div onclick="setFormat('webp')">WEBP</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let qr;
+let currentFormat = "png";
+
+function bindColor(input, preview, code) {
+  function update() {
+    preview.style.background = input.value;
+    code.textContent = input.value.toUpperCase();
+  }
+  preview.addEventListener("click", () => input.click());
+  input.addEventListener("input", update);
+  update();
+}
+
+bindColor(fg, fgPreview, fgCode);
+bindColor(bg, bgPreview, bgCode);
+
+function generate() {
+  const text = document.getElementById("text").value.trim();
+  if (!text) return alert("Enter text or URL");
+
+  qrBox.innerHTML = "";
+
+  qr = new QRCodeStyling({
+    width: +size.value,
+    height: +size.value,
+    data: text,
+    margin: +margin.value,
+    image: logo.files[0] ? URL.createObjectURL(logo.files[0]) : "",
+    dotsOptions: { color: fg.value, type: "rounded" },
+    backgroundOptions: { color: bg.value },
+    imageOptions: { margin: 6 }
+  });
+
+  qr.append(qrBox);
+}
+
+function toggleMenu() {
+  formatMenu.style.display =
+    formatMenu.style.display === "block" ? "none" : "block";
+}
+
+function setFormat(format) {
+  currentFormat = format;
+  document.querySelectorAll(".format-menu div")
+    .forEach(d => d.classList.remove("active"));
+  event.target.classList.add("active");
+  toggleMenu();
+}
+
+async function downloadQR() {
+  if (!qr) return alert("Generate QR first");
+
+  if (currentFormat === "svg") {
+    qr.download({ extension: "svg", name: "qr-code" });
+    return;
+  }
+
+  const blob = await qr.getRawData("png");
+  const img = new Image();
+  img.src = URL.createObjectURL(blob);
+
+  img.onload = () => {
+    const c = document.createElement("canvas");
+    c.width = img.width;
+    c.height = img.height;
+    c.getContext("2d").drawImage(img, 0, 0);
+    c.toBlob(b => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(b);
+      a.download = `qr-code.${currentFormat}`;
+      a.click();
+    }, `image/${currentFormat}`);
+  };
+}
+</script>
+
+</body>
+</html>
